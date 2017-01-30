@@ -37,26 +37,26 @@ class Seating:
         allocate_seats(partyName,partyNum,seat)
         
         if(carryover>0):
-           check_booking(carryover)
+            check_booking(carryover)
 
     def allocate_bookings(csvFile):
-      df = pd.read_csv("bookings.csv", sep=",", names=["Party","Number"])
+        df = pd.read_csv("bookings.csv", sep=",", names=["Party","Number"])
 
-      for index, row in df.iterrows():
-        partyName = row['Party']
-        partyNum = row['Number']
-        print('Find %d seats for %s' %(partyNum,partyName))
+        for index, row in df.iterrows():
+            partyName = row['Party']
+            partyNum = row['Number']
+            print('Find %d seats for %s' %(partyNum,partyName))
 
         if(partyNum > remaining):
-          refused += partyNum
+            refused += partyNum
         else:
-          check_booking(partyName,partyNum)
+            check_booking(partyName,partyNum)
 
     def allocate_seats(partyName,partyNum,seat):
-      for i in range(partyNum):
-        check_seat_ref(seat-i+1)
+        for i in range(partyNum):
+            check_seat_ref(seat-i+1)
     
-    def update_seat_file:
+    def update_seat_file(self):
         print("")
 
     def parse_args(self):
