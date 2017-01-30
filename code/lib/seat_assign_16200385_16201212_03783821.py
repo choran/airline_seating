@@ -3,10 +3,6 @@ import pandas as pd
 import sqlite3
 import argparse
 
-refused = 0
-remaining = 0
-seperated = 0
-
 class Seating:
     def __init__(self):
         # Empty for now, may read input from text file or other source
@@ -62,3 +58,8 @@ class Seating:
     
     def update_seat_file:
         print("")
+
+refused = 0
+remaining = 0
+seperated = 0
+
