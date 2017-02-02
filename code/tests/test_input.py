@@ -1,5 +1,5 @@
 import unittest
-from lib.seat_assign_16200385_16201212_03783821 import Seating
+from lib.seat_assign import Seating
 
 
 class TestInput(unittest.TestCase):
