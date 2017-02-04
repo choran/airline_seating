@@ -62,7 +62,8 @@ class Seating:
             carryover +=1
             partyNum -= 1
             seat = sort_dict(partyNum)
-    
+        
+        seat_dict[seat] -= partyNum
         allocate_seats(partyName,partyNum,seat)
         
         if(carryover>0):
