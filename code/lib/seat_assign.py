@@ -3,9 +3,10 @@ import pandas as pd
 import sqlite3
 import argparse
 
+# Need to get value for dict
+VALUE = 1
+
 class Seating:
-
-
     def __init__(self):
         # Empty for now, may read input from text file or other source
         self.seat_availability = {}
@@ -14,9 +15,9 @@ class Seating:
         self.num_rows = 0
         self.seats_per_row = 0
         self.total_seats = 0
-        pass
 
-    def evens1st(num):
+    def evens1st(seats):
+        num = seats[VALUE]
         # Test with modulus (%) two
         if num == 0:
             return 8000
@@ -28,6 +29,28 @@ class Seating:
         # It's odd, return the negated inverse
         else:
             return -1 * (num)
+
+    def sort_dict(self, seats, group):
+        """
+        seats: dict of seat num as key and empty adjacent seats as value
+        group: number of people in booking group
+        :return: avail_seats - dict with seat num and seat num differentiator
+        """
+
+        avail_seats = {}
+        for key, val in seats.items():
+            # Need to calculated difference in available seats
+            # and number in group
+            avail_seats[key] = (val - group)
+
+        # Now sort the avail seat dict so
+        # 1: even numbers are first in asc order
+        # 2: odd numbers are next in asc order
+        # 3: negative numbers are next in desc order
+        seat_diff = sorted(avail_seats.items(), key=evens1st, reverse=True)
+        # Only interested in first element on sorted list
+        # It is a tuple of set num and diff value
+        return(seat_diff[0])
 
     def check_seat():
      print("")
@@ -186,10 +209,10 @@ refused = 0
 remaining = 0
 seperated = 0
 
-seating = Seating()
+#seating = Seating()
 
-args = seating.parse_args()
-print(args)
-connection = seating.create_connection(args.db)
-seating.setup_plane_config(connection)
+#args = seating.parse_args()
+#print(args)
+#connection = seating.create_connection(args.db)
+#seating.setup_plane_config(connection)
 
