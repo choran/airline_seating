@@ -16,7 +16,7 @@ class Seating:
         self.seats_per_row = 0
         self.total_seats = 0
 
-    def evens1st(seats):
+    def _evens1st(self, seats):
         num = seats[VALUE]
         # Test with modulus (%) two
         if num == 0:
@@ -47,7 +47,7 @@ class Seating:
         # 1: even numbers are first in asc order
         # 2: odd numbers are next in asc order
         # 3: negative numbers are next in desc order
-        seat_diff = sorted(avail_seats.items(), key=evens1st, reverse=True)
+        seat_diff = sorted(avail_seats.items(), key=self._evens1st, reverse=True)
         # Only interested in first element on sorted list
         # It is a tuple of set num and diff value
         return(seat_diff[0])
