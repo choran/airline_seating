@@ -2,6 +2,7 @@ import os
 import pandas as pd
 import sqlite3
 import argparse
+import math
 
 # Need to get value for dict
 VALUE = 1
@@ -51,27 +52,26 @@ class Seating:
         # Only interested in first element on sorted list
         # It is a tuple of set num and diff value
         return(seat_diff[0])
-
-    def check_seat():
-     print("")
     
-    def check_booking(name,number):
+    def check_booking(name,number,push_carryover):
         partyName = name
         partyNum = number    
         carryover = 0
-        seat = check_seat(partyNum)
+        seat = sort_dict(partyNum)
         while seat <0:
             carryover +=1
             partyNum -= 1
-            seat = check_seat(partyNum)
+            seat = sort_dict(partyNum)
     
         allocate_seats(partyName,partyNum,seat)
         
         if(carryover>0):
-            check_booking(carryover)
+            if push_carryover == True:
+                seperated += number
+            check_booking(partName,carryover,False)
 
     def allocate_bookings(csvFile):
-        df = pd.read_csv("bookings.csv", sep=",", names=["Party","Number"])
+        df = pd.read_csv(csvFile, sep=",", names=["Party","Number"])
 
         for index, row in df.iterrows():
             partyName = row['Party']
@@ -81,12 +81,25 @@ class Seating:
         if(partyNum > remaining):
             refused += partyNum
         else:
-            check_booking(partyName,partyNum)
+            check_booking(partyName,partyNum,True)
 
-    def allocate_seats(partyName,partyNum,seat):
-        for i in range(partyNum):
-            check_seat_ref(seat-i+1)
+    def allocate_seats(partyName,partyNum,seat,conn):
+        seats = []
+        for i in range(1,partyNum+1):
+            seat = check_seat_ref(seat+partyNum-i)
+            seats.push(seat)
+        
+        cursor = conn.cursor()
+        for item in seats:
+            c.execute(UPDATE seating SET name='%s' WHERE row=%d AND seat='%s';" %(partyName,item[0],item[1]))
+        cursor.commit()        
     
+    def check_seat_ref(self,seatNum):
+        row = math.ceil(seatNum/seat_per_row)
+        seatMap = seatNum - (row-1)*(seats_per_row)
+        seat_ref = (row,seatMap)
+        return seat_ref
+        
     def update_seat_file(self):
         print("")
 
