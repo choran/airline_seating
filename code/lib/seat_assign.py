@@ -106,7 +106,7 @@ class Seating:
         #Update the database
         cursor = self.connection.cursor()
         for item in seats:
-            c.execute(UPDATE seating SET name='%s' WHERE row=%d AND seat='%s';" %(partyName,item[0],item[1]))
+            cursor.execute("UPDATE seating SET name='%s' WHERE row=%d AND seat='%s';" %(partyName,item[0],item[1]))
         cursor.commit()        
     
     def check_seat_ref(self,seatNum):
