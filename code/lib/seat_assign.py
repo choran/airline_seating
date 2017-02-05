@@ -16,6 +16,9 @@ class Seating:
         self.num_rows = 0
         self.seats_per_row = 0
         self.total_seats = 0
+        self.refused = 0
+        self.remaining = 0
+        self.seperated = 0
 
     def _evens1st(self, seats):
         num = seats[VALUE]
@@ -53,56 +56,67 @@ class Seating:
         # It is a tuple of set num and diff value
         return(seat_diff[0])
     
-    def check_booking(name,number,push_carryover):
-        partyName = name
-        partyNum = number    
+    def check_booking(self,name,number,push_carryover):
+        """
+        name: Name of party
+        number: Number travelling
+        push_carryover: Boolean of whether first call to function to include seperated passengers.
+        :return: 
+        """   
+        # Check best seating position by iterating until party is small enough to be allocated
+        partyNum = number
         carryover = 0
-        seat = sort_dict(partyNum)
-        while seat <0:
+        seat = sort_dict(number)
+        while seat[0] <0:
             carryover +=1
             partyNum -= 1
             seat = sort_dict(partyNum)
         
-        seat_dict[seat] -= partyNum
-        allocate_seats(partyName,partyNum,seat)
+        #Update dictionary of avialable seats and allocate seats in database
+        self.seat_availability[seat] -= partyNum
+        allocate_seats(name,partyNum,seat)
         
+        #If party had to be split up, update statistics and alloacte seats for those seperated.
         if(carryover>0):
             if push_carryover == True:
-                seperated += number
-            check_booking(partName,carryover,False)
+                self.seperated += number
+            check_booking(name,carryover,False)
 
-    def allocate_bookings(csvFile):
-        df = pd.read_csv(csvFile, sep=",", names=["Party","Number"])
-
+    def allocate_bookings(self):
+        df = pd.read_csv(self.csv, sep=",", names=["Party","Number"])
+        
+        #iterate through each booking to allocate seats.
         for index, row in df.iterrows():
             partyName = row['Party']
             partyNum = row['Number']
             print('Find %d seats for %s' %(partyNum,partyName))
-
-        if(partyNum > remaining):
-            refused += partyNum
+        
+        #If we can't accommodate them then refuse else allocate some seat.
+        if(partyNum > self.remaining):
+            self.refused += partyNum
         else:
             check_booking(partyName,partyNum,True)
 
-    def allocate_seats(partyName,partyNum,seat,conn):
+    def allocate_seats(self,partyName,partyNum,seat):
         seats = []
+        #Find the seat references for each of the passengers
         for i in range(1,partyNum+1):
             seat = check_seat_ref(seat+partyNum-i)
             seats.push(seat)
         
-        cursor = conn.cursor()
+        #Update the database
+        cursor = self.connection.cursor()
         for item in seats:
             c.execute(UPDATE seating SET name='%s' WHERE row=%d AND seat='%s';" %(partyName,item[0],item[1]))
         cursor.commit()        
     
     def check_seat_ref(self,seatNum):
-        row = math.ceil(seatNum/seat_per_row)
-        seatMap = seatNum - (row-1)*(seats_per_row)
+        #Row number of the seat
+        row = math.ceil(seatNum/self.seats_per_row)
+        #The number mapping of the seat.
+        seatMap = seatNum - (row-1)*(self.seats_per_row)
         seat_ref = (row,seatMap)
         return seat_ref
-        
-    def update_seat_file(self):
-        print("")
 
     def parse_args(self):
         parser = argparse.ArgumentParser()
@@ -138,7 +152,8 @@ class Seating:
 
         self.seats_per_row = len(self.num_to_let_mapping)
         self.total_seats = self.num_rows * self.seats_per_row
-
+        self.remaining = self.total_seats
+                      
         cursor.execute("select row, seat from seating where name <> '' order by row, seat")
 
         current_pointer = 1
@@ -219,14 +234,11 @@ class Seating:
             print('Key: ' + str(k) + ' Value: ' + str(v))
         print('-----')
 
-refused = 0
-remaining = 0
-seperated = 0
-
 #seating = Seating()
 
 #args = seating.parse_args()
 #print(args)
 #connection = seating.create_connection(args.db)
 #seating.setup_plane_config(connection)
+#seating.allocate_bookings()
 
