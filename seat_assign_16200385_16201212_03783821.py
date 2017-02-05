@@ -4,5 +4,12 @@ from code.lib.seat_assign import Seating
 
 if __name__ == '__main__':
     print('test')
+    #seating = Seating()
 
+    #seating.parse_args()
+    #seating.create_connection()
+    #seating.get_plane_layout()
+    #seating.populate_seat_availability()
+    #seating.allocate_bookings()
+    #seating.populate_statistics()
 
