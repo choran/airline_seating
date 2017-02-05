@@ -10,6 +10,10 @@ VALUE = 1
 class Seating:
     def __init__(self):
         # Empty for now, may read input from text file or other source
+        self.connection = None
+        self.args = None
+        self.dbfile = ""
+        self.csvfile = ""
         self.seat_availability = {}
         self.num_to_let_mapping = {}
         self.let_to_num_mapping = {}
@@ -71,8 +75,8 @@ class Seating:
                 seperated += number
             check_booking(partName,carryover,False)
 
-    def allocate_bookings(csvFile):
-        df = pd.read_csv(csvFile, sep=",", names=["Party","Number"])
+    def allocate_bookings(self):
+        df = pd.read_csv(self.csvfile, sep=",", names=["Party","Number"])
 
         for index, row in df.iterrows():
             partyName = row['Party']
@@ -84,15 +88,15 @@ class Seating:
         else:
             check_booking(partyName,partyNum,True)
 
-    def allocate_seats(partyName,partyNum,seat,conn):
+    def allocate_seats(self,partyName,partyNum,seat,conn):
         seats = []
         for i in range(1,partyNum+1):
             seat = check_seat_ref(seat+partyNum-i)
             seats.push(seat)
         
-        cursor = conn.cursor()
+        cursor = self.connection.cursor()
         for item in seats:
-            c.execute(UPDATE seating SET name='%s' WHERE row=%d AND seat='%s';" %(partyName,item[0],item[1]))
+            cursor.execute("UPDATE seating SET name='%s' WHERE row=%d AND seat='%s';" %(partyName,item[0],item[1]))
         cursor.commit()        
     
     def check_seat_ref(self,seatNum):
@@ -108,24 +112,24 @@ class Seating:
         parser = argparse.ArgumentParser()
         parser.add_argument('db', type=str)
         parser.add_argument('csv', type=str)
-        return parser.parse_args()
+        self.args = parser.parse_args()
+        print(self.args)
 
-    def create_connection(self, db_file):
+    def create_connection(self):
         '''
 
         :param db_file: filename of the SQLite database
         '''
-        connection = sqlite3.connect(db_file)
+        self.connection = sqlite3.connect(self.dbfile)
         #TODO: Need to check for invalid connection at this point i.e. no DB file in location
-        return connection
 
-    def setup_plane_config(self, conn):
+    def setup_plane_config(self):
         '''
 
         :param connection:  connection to the SQLite DB
         :return:
         '''
-        cursor = conn.cursor()
+        cursor = self.connection.cursor()
         cursor.execute("select nrows, seats from rows_cols")
         row = cursor.fetchone()
 
@@ -226,7 +230,6 @@ seperated = 0
 #seating = Seating()
 
 #args = seating.parse_args()
-#print(args)
-#connection = seating.create_connection(args.db)
-#seating.setup_plane_config(connection)
+#seating.create_connection()
+#seating.setup_plane_config()
 
