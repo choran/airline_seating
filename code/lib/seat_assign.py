@@ -60,8 +60,7 @@ class Seating:
         """
         name: Name of party
         number: Number travelling
-        push_carryover: Boolean of whether first call to function to include seperated passengers.
-        :return: 
+        push_carryover: Boolean of whether first call to function to include seperated passengers. 
         """   
         # Check best seating position by iterating until party is small enough to be allocated
         partyNum = number
@@ -74,13 +73,13 @@ class Seating:
         
         #Update dictionary of avialable seats and allocate seats in database
         self.seat_availability[seat] -= partyNum
-        allocate_seats(name,partyNum,seat)
+        self.allocate_seats(name,partyNum,seat)
         
         #If party had to be split up, update statistics and alloacte seats for those seperated.
         if(carryover>0):
             if push_carryover == True:
                 self.seperated += number
-            check_booking(name,carryover,False)
+            self.check_booking(name,carryover,False)
 
     def allocate_bookings(self):
         df = pd.read_csv(self.csv, sep=",", names=["Party","Number"])
@@ -95,13 +94,13 @@ class Seating:
         if(partyNum > self.remaining):
             self.refused += partyNum
         else:
-            check_booking(partyName,partyNum,True)
+            self.check_booking(partyName,partyNum,True)
 
     def allocate_seats(self,partyName,partyNum,seat):
         seats = []
         #Find the seat references for each of the passengers
         for i in range(1,partyNum+1):
-            seat = check_seat_ref(seat+partyNum-i)
+            seat = self.check_seat_ref(seat+partyNum-i)
             seats.push(seat)
         
         #Update the database
@@ -115,7 +114,8 @@ class Seating:
         row = math.ceil(seatNum/self.seats_per_row)
         #The number mapping of the seat.
         seatMap = seatNum - (row-1)*(self.seats_per_row)
-        seat_ref = (row,seatMap)
+        seatLetter = self.let_to_num_mapping[seatMap]
+        seat_ref = (row,seatLetter)
         return seat_ref
 
     def parse_args(self):
