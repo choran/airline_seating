@@ -4,3 +4,5 @@ from code.lib.seat_assign import Seating
 
 if __name__ == '__main__':
     print('test')
+
+
