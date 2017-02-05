@@ -1,4 +1,6 @@
+from unittest.mock import MagicMock, Mock, patch
 import unittest
+import sqlite3
 from lib.seat_assign import Seating
 
 
@@ -78,6 +80,26 @@ class TestInput(unittest.TestCase):
         exp_result = (18, -1)
         avail_seats = seating.sort_dict(seat_nums, group_num)
         self.assertEqual(avail_seats, exp_result)
+
+    @patch('sqlite3.connect')
+    def test_failed_connection(self, mock_connect):
+        """
+        Simple unittest for failed sqlite db connection
+        """
+        seating = Seating()
+        sqlite3.connect = MagicMock(return_value='connection failed')
+        conn = seating.create_connection('test_database')
+        sqlite3.connect.assert_called_with('test_database')
+        self.assertEqual(conn, 'connection failed')
+
+    def test_successful_connection(self):
+        """
+        Simple unittest for successful sqlite db connection
+        """
+        seating = Seating()
+        conn = seating.create_connection(":memory:")
+        self.assertIsInstance(conn, sqlite3.Connection)
+
 
 if __name__ == '__main__':
     unittest.main()
