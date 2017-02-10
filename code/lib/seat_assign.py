@@ -10,15 +10,23 @@ VALUE = 1
 class Seating:
     def __init__(self):
         # Empty for now, may read input from text file or other source
+
+        self.connection = None
+        self.db_file = ""
+        self.csv_file = ""
         self.seat_availability = {}
         self.num_to_let_mapping = {}
         self.let_to_num_mapping = {}
+
+        self.db_file = ""
+        self.csv_file = ""
+
         self.num_rows = 0
         self.seats_per_row = 0
         self.total_seats = 0
         self.refused = 0
         self.remaining = 0
-        self.seperated = 0
+        self.separated = 0
 
     def _evens1st(self, seats):
         num = seats[VALUE]
@@ -82,7 +90,7 @@ class Seating:
             self.check_booking(name,carryover,False)
 
     def allocate_bookings(self):
-        df = pd.read_csv(self.csv, sep=",", names=["Party","Number"])
+        df = pd.read_csv(self.csv_file, sep=",", names=["Party","Number"])
         
         #iterate through each booking to allocate seats.
         for index, row in df.iterrows():
@@ -119,86 +127,106 @@ class Seating:
         return seat_ref
 
     def parse_args(self):
+        """
+        Function will read in the database location and bookings location arguments
+        and store them in the class for re-use
+        """
         parser = argparse.ArgumentParser()
         parser.add_argument('db', type=str)
         parser.add_argument('csv', type=str)
-        return parser.parse_args()
+        args = parser.parse_args()
 
-    def create_connection(self, db_file):
-        '''
+        self.db_file = args.db
+        self.csv_file = args.csv
 
-        :param db_file: filename of the SQLite database
+    def create_connection(self):
         '''
-        connection = sqlite3.connect(db_file)
-        #TODO: Need to check for invalid connection at this point i.e. no DB file in location
-        return connection
+        Function will create the connection to the sqlite3 daetabase using the provided command-line arguments
+        '''
+        self.connection = sqlite3.connect(self.db_file)
 
-    def setup_plane_config(self, conn):
+    def get_plane_layout(self):
         '''
-
-        :param connection:  connection to the SQLite DB
-        :return:
+        Function will retrieve the plane layout parameters from the DB
+        and then populate the related variables e.g. total_seats and let_to_num_mapping
         '''
-        cursor = conn.cursor()
-        cursor.execute("select nrows, seats from rows_cols")
+        cursor = self.connection.cursor()
+        cursor.execute("SELECT nrows, seats FROM rows_cols")
         row = cursor.fetchone()
 
-        self.num_rows = row[0]
+        self.num_rows = row[0] # Number of rows on the plane
         seat_layout = row[1]
 
         for key, char in enumerate(list(seat_layout)):
-            self.num_to_let_mapping[key + 1] = char
-            self.let_to_num_mapping[char] = key + 1
+            self.num_to_let_mapping[key + 1] = char     # Mapping of seat numbers to their representative letters
+            self.let_to_num_mapping[char] = key + 1     # Mapping of seat letters to their representative numbers
 
-        self.seats_per_row = len(self.num_to_let_mapping)
-        self.total_seats = self.num_rows * self.seats_per_row
-        self.remaining = self.total_seats
-                      
-        cursor.execute("select row, seat from seating where name <> '' order by row, seat")
+        self.seats_per_row = len(self.num_to_let_mapping)       # Number of seats per row on the plane
+        self.total_seats = self.num_rows * self.seats_per_row   # Total number of seats on the plane
+        self.remaining = self.total_seats                       # Number of seats still available on the plane
 
+    def populate_seat_availability(self):
+        '''
+        Function will traverse the seating data from the DB and generate a free seat mapping for the plane.
+        For instance, if seats B, E and F are free on row 1, then the dict will contain {2: 1, 5: 2}
+        '''
+
+        # Retrieve all previously bought seats on the plane in row, seat order
+        cursor = self.connection.cursor()
+        cursor.execute("SELECT row, seat FROM seating WHERE name <> '' ORDER BY row, seat")
+
+        #set initial variables for traversal
         current_pointer = 1
         current_row = 1
         current_seat = 1
         count_consecutive = 0
         row_populated = False
         rec = cursor.fetchone()
+
+        # While there are more passengers...
         while rec is not None:
+            # Get the row and seat for the passenger
             new_row = rec[0]
             new_seat = self.let_to_num_mapping[rec[1]]
-            print('new_row ' + str(new_row))
-            print('new_seat ' + str(new_seat))
 
+            # If the next passenger to be processed is not on the same row as the previous passenger
             if current_row != new_row:
                 if(row_populated == False):
-                    print('Row ' + str(current_row) + ' not populated!')
+                    # Create entry for fully empty row
                     self.seat_availability[(current_row - 1) * self.seats_per_row + 1] = 0
                 row_populated == False
-                #print('Current Row != New Row')
+
+                # Create entry for the rest of the row
                 rest_of_row = (self.seats_per_row - current_seat) + 1
                 self.seat_availability[current_pointer] = rest_of_row
                 row_populated = True
+
+                # For each row between current and previous row, create entry for fully empty row
                 for i in range(current_row + 1, new_row):
                     current_pointer = ((i - 1) * self.seats_per_row) + 1
                     self.seat_availability[current_pointer] = self.seats_per_row
                     row_populated = True
+
+                # Set variables for next iteration
                 current_row = new_row
                 current_seat = 1
                 row_populated = False
                 current_pointer = ((new_row - 1) * self.seats_per_row) + 1
-                # process end of current row
-                # process all interim rows
 
-            #print('Current Row = New Row')
+            # Process consecutive seats
             if current_seat == new_seat:
-                #print('Current Seat = New Seat')
+                # Add to counter and move the pointers on to the next seat
                 count_consecutive += 1
                 current_seat += 1
                 current_pointer = (current_row - 1) * self.seats_per_row + (new_seat + 1)
-                #print('current_pointer ' + str(current_pointer))
+
+            # Process next passenger on the same row i.e non-consecutive seats purchased
             else:
-                #print('Current Seat != New Seat')
+                # Find intervening seats and use this to populate the mapping
                 self.seat_availability[current_pointer] = new_seat - current_seat
                 row_populated = True
+
+                #Handle end of aisle seats
                 if new_seat == self.seats_per_row:
                     current_seat = 1
                     row_populated = False
@@ -207,23 +235,26 @@ class Seating:
                 else:
                     current_seat = new_seat + 1
                     current_pointer = (current_row - 1) * self.seats_per_row + (new_seat + 1)
+
                 count_consecutive = 1
 
-
-            print('-----')
-            print(self.seat_availability)
-            print('-----')
-
+            # Populate the rest of the plane once all occupied seats have been processed
             rec = cursor.fetchone()
             if rec is None:
-                    if current_pointer <= self.total_seats: #will indicate that the last seat on the plane was already processed
+                    # Check that the last seat on the plane was already processed
+                    if current_pointer <= self.total_seats:
+
+                        # Populate rest of current row
                         new_row = self.num_rows + 1
                         rest_of_row = (self.seats_per_row - current_seat) + 1
                         self.seat_availability[current_pointer] = rest_of_row
+
+                        # For remaining rows, populate fully empty row
                         for i in range(current_row + 1, new_row):
                             current_pointer = ((i - 1) * self.seats_per_row) + 1
                             self.seat_availability[current_pointer] = self.seats_per_row
 
+        # Handle empty passenger list scenario
         if not bool(self.seat_availability):
             for i in range (1, self.num_rows + 1):
                 current_pointer = ((i - 1) * self.seats_per_row) + 1
@@ -234,11 +265,9 @@ class Seating:
             print('Key: ' + str(k) + ' Value: ' + str(v))
         print('-----')
 
-#seating = Seating()
-
-#args = seating.parse_args()
-#print(args)
-#connection = seating.create_connection(args.db)
-#seating.setup_plane_config(connection)
-#seating.allocate_bookings()
-
+    def populate_statistics(self):
+        '''
+        Function will populate the DB with the plane statistics i.e. passengers_refused, passengers_separated
+        '''
+        cursor = self.connection.cursor()
+        cursor.execute("UPDATE metrics SET passengers_refused = %d, passengers_separated = %d;" %(self.refused, self.separated))
