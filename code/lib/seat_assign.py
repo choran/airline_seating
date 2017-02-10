@@ -109,20 +109,20 @@ class Seating:
         #Find the seat references for each of the passengers
         for i in range(1,partyNum+1):
             seat = self.check_seat_ref(seat[0]+partyNum-i)
-            seats.push(seat)
+            seats.append(seat)
         
         #Update the database
         cursor = self.connection.cursor()
         for item in seats:
             cursor.execute("UPDATE seating SET name='%s' WHERE row=%d AND seat='%s';" %(partyName,item[0],item[1]))
-        cursor.commit()        
+        self.connection.commit()
     
     def check_seat_ref(self,seatNum):
         #Row number of the seat
         row = math.ceil(seatNum/self.seats_per_row)
         #The number mapping of the seat.
         seatMap = seatNum - (row-1)*(self.seats_per_row)
-        seatLetter = self.let_to_num_mapping[seatMap]
+        seatLetter = self.num_to_let_mapping[seatMap]
         seat_ref = (row,seatLetter)
         return seat_ref
 
