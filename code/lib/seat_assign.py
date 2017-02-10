@@ -42,15 +42,15 @@ class Seating:
         else:
             return -1 * (num)
 
-    def sort_dict(self, seats, group):
+    def _sort_dict(self, group):
         """
         seats: dict of seat num as key and empty adjacent seats as value
         group: number of people in booking group
-        :return: avail_seats - dict with seat num and seat num differentiator
+        :return: avail_seats - tuple with seat num and seat num differentiator
         """
 
         avail_seats = {}
-        for key, val in seats.items():
+        for key, val in self.seat_availability.items():
             # Need to calculated difference in available seats
             # and number in group
             avail_seats[key] = (val - group)
@@ -61,7 +61,7 @@ class Seating:
         # 3: negative numbers are next in desc order
         seat_diff = sorted(avail_seats.items(), key=self._evens1st, reverse=True)
         # Only interested in first element on sorted list
-        # It is a tuple of set num and diff value
+        # It is a tuple of seat num and diff value
         return(seat_diff[0])
     
     def check_booking(self,name,number,push_carryover):
@@ -73,14 +73,14 @@ class Seating:
         # Check best seating position by iterating until party is small enough to be allocated
         partyNum = number
         carryover = 0
-        seat = sort_dict(number)
+        seat = self._sort_dict(number)
         while seat[0] <0:
             carryover +=1
             partyNum -= 1
-            seat = sort_dict(partyNum)
+            seat = self._sort_dict(partyNum)
         
         #Update dictionary of avialable seats and allocate seats in database
-        self.seat_availability[seat] -= partyNum
+        self.seat_availability[seat[0]] -= partyNum
         self.allocate_seats(name,partyNum,seat)
         
         #If party had to be split up, update statistics and alloacte seats for those seperated.
@@ -108,7 +108,7 @@ class Seating:
         seats = []
         #Find the seat references for each of the passengers
         for i in range(1,partyNum+1):
-            seat = self.check_seat_ref(seat+partyNum-i)
+            seat = self.check_seat_ref(seat[0]+partyNum-i)
             seats.push(seat)
         
         #Update the database
