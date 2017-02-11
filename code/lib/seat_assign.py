@@ -64,7 +64,7 @@ class Seating:
         # It is a tuple of seat num and diff value
         return(seat_diff[0])
     
-    def check_booking(self,name,number,push_carryover):
+    def check_booking(self, name, number, push_carryover):
         """
         name: Name of party
         number: Number travelling
@@ -81,8 +81,8 @@ class Seating:
         
         #Update dictionary of avialable seats and allocate seats in database
         self.seat_availability[seat[0]] -= partyNum
-        self.allocate_seats(name,partyNum,seat)
-        
+        self.allocate_seats(name, partyNum, seat)
+
         #If party had to be split up, update statistics and alloacte seats for those seperated.
         if(carryover>0):
             if push_carryover == True:
@@ -99,10 +99,10 @@ class Seating:
             print('Find %d seats for %s' %(partyNum,partyName))
         
         #If we can't accommodate them then refuse else allocate some seat.
-        if(partyNum > self.remaining):
-            self.refused += partyNum
-        else:
-            self.check_booking(partyName,partyNum,True)
+            if(partyNum > self.remaining):
+                self.refused += partyNum
+            else:
+                self.check_booking(partyName,partyNum,True)
 
     def allocate_seats(self,partyName,partyNum,seat):
         seats = []
@@ -113,9 +113,11 @@ class Seating:
         
         #Update the database
         cursor = self.connection.cursor()
+        print(seats)
         for item in seats:
             cursor.execute("UPDATE seating SET name='%s' WHERE row=%d AND seat='%s';" %(partyName,item[0],item[1]))
         self.connection.commit()
+        print("self.remaining & self.refused & self.separated: %i %i %i" % (self.remaining, self.refused, self.separated) )
     
     def check_seat_ref(self,seatNum):
         #Row number of the seat
@@ -144,6 +146,12 @@ class Seating:
         Function will create the connection to the sqlite3 daetabase using the provided command-line arguments
         '''
         self.connection = sqlite3.connect(self.db_file)
+
+    def destroy_connection(self):
+        '''
+        Function will destroy the connection to the sqlite3 daetabase
+        '''
+        self.connection.close()
 
     def get_plane_layout(self):
         '''
@@ -270,4 +278,6 @@ class Seating:
         Function will populate the DB with the plane statistics i.e. passengers_refused, passengers_separated
         '''
         cursor = self.connection.cursor()
+        print("self.refused & self.separated: %i %i" % (self.refused, self.separated) )
         cursor.execute("UPDATE metrics SET passengers_refused = %d, passengers_separated = %d;" %(self.refused, self.separated))
+        self.connection.commit()
