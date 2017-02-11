@@ -74,19 +74,20 @@ class Seating:
         partyNum = number
         carryover = 0
         seat = self._sort_dict(number)
-        while seat[0] <0:
+        while seat[1] <0:
             carryover +=1
             partyNum -= 1
             seat = self._sort_dict(partyNum)
         
         #Update dictionary of avialable seats and allocate seats in database
         self.seat_availability[seat[0]] -= partyNum
-        self.allocate_seats(name, partyNum, seat)
+        self.allocate_seats(name, partyNum, seat[0])
+        self.remaining -= partyNum
 
         #If party had to be split up, update statistics and alloacte seats for those seperated.
         if(carryover>0):
             if push_carryover == True:
-                self.seperated += number
+                self.separated += number
             self.check_booking(name,carryover,False)
 
     def allocate_bookings(self):
@@ -104,11 +105,11 @@ class Seating:
             else:
                 self.check_booking(partyName,partyNum,True)
 
-    def allocate_seats(self,partyName,partyNum,seat):
+    def allocate_seats(self,partyName,partyNum,startSeat):
         seats = []
         #Find the seat references for each of the passengers
         for i in range(1,partyNum+1):
-            seat = self.check_seat_ref(seat[0]+partyNum-i)
+            seat = self.check_seat_ref(startSeat+partyNum-i)
             seats.append(seat)
         
         #Update the database
