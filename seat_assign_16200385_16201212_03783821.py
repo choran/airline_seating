@@ -12,4 +12,4 @@ if __name__ == '__main__':
     seating.populate_seat_availability()
     seating.allocate_bookings()
     seating.populate_statistics()
-
+    seating.destroy_connection()
