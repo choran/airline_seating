@@ -81,7 +81,7 @@ class Seating:
         
         #Update dictionary of avialable seats and allocate seats in database
         self.seat_availability[seat[0]] -= partyNum
-        self.allocate_seats(name, partyNum, seat[0])
+        self.allocate_seats(name, partyNum, seat)
         self.remaining -= partyNum
 
         #If party had to be split up, update statistics and alloacte seats for those seperated.
@@ -109,7 +109,7 @@ class Seating:
         seats = []
         #Find the seat references for each of the passengers
         for i in range(1,partyNum+1):
-            seat = self.check_seat_ref(startSeat+partyNum-i)
+            seat = self.check_seat_ref(startSeat[0]+startSeat[1]+partyNum-i)
             seats.append(seat)
         
         #Update the database
