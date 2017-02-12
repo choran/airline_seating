@@ -68,7 +68,7 @@ class Seating:
         """
         name: Name of party
         number: Number travelling
-        push_carryover: Boolean of whether first call to function to include seperated passengers. 
+        push_carryover: Boolean of whether first call to function which will update seperated passengers. 
         """   
         # Check best seating position by iterating until party is small enough to be allocated
         partyNum = number
@@ -79,20 +79,24 @@ class Seating:
             partyNum -= 1
             seat = self._sort_dict(partyNum)
         
+        # Decrease the remaining passengers the plane can take.
+        self.remaining -= partyNum
         # Update dictionary of avialable seats and allocate seats in database
         self.seat_availability[seat[0]] -= partyNum
         self.allocate_seats(name, partyNum, seat)
-        # Decrease the remaining passengers the plane can take.
-        self.remaining -= partyNum
+        
 
         #If party had to be split up, update statistics and alloacte seats for those seperated.
         if(carryover>0):
             #On the first run through, we update passenger separeted. On second run, these have already been accounted for.
             if push_carryover == True:
+                print('Party of %d separated (%s)' %(number,name))
                 self.separated += number
+            #Itereate through again looking for seats for the separated passemgers   
             self.check_booking(name,carryover,False)
 
     def allocate_bookings(self):
+        #Access the CSV through Pandas and store.
         df = pd.read_csv(self.csv_file, sep=",", names=["Party","Number"])
         
         #iterate through each booking to allocate seats.
@@ -103,11 +107,18 @@ class Seating:
         
         #If we can't accommodate them then refuse else allocate some seat.
             if(partyNum > self.remaining):
+                print('Refused %s as party of %d' %(partyName,partyNum))
                 self.refused += partyNum
             else:
                 self.check_booking(partyName,partyNum,True)
 
     def allocate_seats(self,partyName,partyNum,startSeat):
+        """
+        partyName: Name of party
+        partyNum: Number travelling
+        startSeat: Information on the starting seat which the party should be filled from. 
+        """  
+        #empty array to store allocated deats/
         seats = []
         #Find the seat references for each of the passengers
         for i in range(1,partyNum+1):
@@ -115,20 +126,26 @@ class Seating:
             seat = self.check_seat_ref(startSeat[0]+startSeat[1]+partyNum-i)
             seats.append(seat)
         
-        #Update the database
+        #Update the database with the seats each passenger has been allocated.
         cursor = self.connection.cursor()
-        print(seats)
+        print(partyName,seats)
         for item in seats:
             cursor.execute("UPDATE seating SET name='%s' WHERE row=%d AND seat='%s';" %(partyName,item[0],item[1]))
         self.connection.commit()
         print("self.remaining & self.refused & self.separated: %i %i %i" % (self.remaining, self.refused, self.separated) )
     
     def check_seat_ref(self,seatNum):
-        #Row number of the seat
+        """
+        seatNum: The numerical seat reference e.g. 6
+        :return: Tuple with common seat refernce e.g. (1,F)
+        """
+        #Row number of the seat, rounded up to intefer
         row = math.ceil(seatNum/self.seats_per_row)
         #The number mapping of the seat.
         seatMap = seatNum - (row-1)*(self.seats_per_row)
+        #Access the letter mapping the seat corresponds to.
         seatLetter = self.num_to_let_mapping[seatMap]
+        #Return the seat in tuple
         seat_ref = (row,seatLetter)
         return seat_ref
 
