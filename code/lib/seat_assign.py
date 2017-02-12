@@ -193,6 +193,7 @@ class Seating:
 
         # While there are more passengers...
         while rec is not None:
+            self.remaining -= 1
             # Get the row and seat for the passenger
             new_row = rec[0]
             new_seat = self.let_to_num_mapping[rec[1]]
@@ -271,6 +272,8 @@ class Seating:
         print('-----')
         for (k, v) in sorted(self.seat_availability.items()):
             print('Key: ' + str(k) + ' Value: ' + str(v))
+        print('-----')
+        print('Seats Remaining: %i' % (self.remaining))
         print('-----')
 
     def populate_statistics(self):
