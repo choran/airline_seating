@@ -99,6 +99,17 @@ class TestInput(unittest.TestCase):
         seating = Seating()
         conn = seating.create_connection(":memory:")
         self.assertIsInstance(conn, sqlite3.Connection)
+     
+    def test_check_seat_ref(self):
+        """
+        Quick test of seat reference converter
+        """
+        seating = Seating()
+        seating.seats_per_row = 6
+        seating.num_to_let_mapping = {1: 'A', 2: 'B', 3: 'C', 4: 'D', 5: 'E', 6: 'F',}
+        seat = seating.check_seat_ref(8)
+        exp_seat = (2,"B")
+        self.assertIsInstance(seat, exp_seat)
 
 
 if __name__ == '__main__':
