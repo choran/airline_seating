@@ -109,6 +109,7 @@ class Seating:
         seats = []
         #Find the seat references for each of the passengers
         for i in range(1,partyNum+1):
+            ##The seat reference is starting position + leftover seats after allocation + party number - passenger number
             seat = self.check_seat_ref(startSeat[0]+startSeat[1]+partyNum-i)
             seats.append(seat)
         
