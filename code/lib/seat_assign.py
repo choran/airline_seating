@@ -79,13 +79,15 @@ class Seating:
             partyNum -= 1
             seat = self._sort_dict(partyNum)
         
-        #Update dictionary of avialable seats and allocate seats in database
+        # Update dictionary of avialable seats and allocate seats in database
         self.seat_availability[seat[0]] -= partyNum
         self.allocate_seats(name, partyNum, seat)
+        # Decrease the remaining passengers the plane can take.
         self.remaining -= partyNum
 
         #If party had to be split up, update statistics and alloacte seats for those seperated.
         if(carryover>0):
+            #On the first run through, we update passenger separeted. On second run, these have already been accounted for.
             if push_carryover == True:
                 self.separated += number
             self.check_booking(name,carryover,False)
