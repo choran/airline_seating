@@ -1,7 +1,7 @@
 from unittest.mock import MagicMock, Mock, patch
 import unittest
 import sqlite3
-from lib.seat_assign import Seating
+from code.lib.seat_assign import Seating
 
 
 class TestInput(unittest.TestCase):
