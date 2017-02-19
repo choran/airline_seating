@@ -111,6 +111,7 @@ class Seating:
                 self.refused += partyNum
             else:
                 self.check_booking(partyName,partyNum,True)
+            #print("self.remaining & self.refused & self.separated: %i %i %i" % (self.remaining, self.refused, self.separated))
 
     def allocate_seats(self,partyName,partyNum,startSeat):
         """
