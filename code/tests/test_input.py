@@ -1,7 +1,10 @@
 from unittest.mock import MagicMock, Mock, patch
 import unittest
 import sqlite3
-from code.lib.seat_assign import Seating
+<<<<<<< HEAD
+import sys
+sys.path.append('..')
+from seat_assign_16200385_16201212_03783821 import Seating
 
 
 class TestInput(unittest.TestCase):
@@ -32,10 +35,10 @@ class TestInput(unittest.TestCase):
         For a new booking of 4 they should be seated in row 1
         """
         seating = Seating()
-        seat_nums = {1: 4, 5: 1, 7: 2, 9: 1, 11: 1, 13: 4, 18: 3}
+        seating.seat_availability = {1: 4, 5: 1, 7: 2, 9: 1, 11: 1, 13: 4, 18: 3}
         group_num = 4
         exp_result = (1, 0)
-        avail_seats = seating.sort_dict(seat_nums, group_num)
+        avail_seats = seating._sort_dict(group_num)
         self.assertEqual(avail_seats, exp_result)
 
 
@@ -54,10 +57,10 @@ class TestInput(unittest.TestCase):
         For a new booking of 4 they should be seated in row 4
         """
         seating = Seating()
-        seat_nums = {1: 1, 3: 2, 5: 1, 7: 2, 9: 4, 13: 4, 18: 3}
+        seating.seat_availability = {1: 1, 3: 2, 5: 1, 7: 2, 9: 4, 13: 4, 18: 3}
         group_num = 3
         exp_result = (18, 0)
-        avail_seats = seating.sort_dict(seat_nums, group_num)
+        avail_seats = seating._sort_dict(group_num)
         self.assertEqual(avail_seats, exp_result)
 
     def test_sort_dict_4_not_toget(self):
@@ -75,10 +78,10 @@ class TestInput(unittest.TestCase):
         this indicates that there are no available adjacent seats
         """
         seating = Seating()
-        seat_nums = {1: 1, 3: 2, 5: 1, 7: 2, 9: 2, 11: 1, 13: 3, 18: 3}
+        seating.seat_availability = {1: 1, 3: 2, 5: 1, 7: 2, 9: 2, 11: 1, 13: 3, 18: 3}
         group_num = 4
         exp_result = (18, -1)
-        avail_seats = seating.sort_dict(seat_nums, group_num)
+        avail_seats = seating._sort_dict(group_num)
         self.assertEqual(avail_seats, exp_result)
 
     @patch('sqlite3.connect')
@@ -88,17 +91,18 @@ class TestInput(unittest.TestCase):
         """
         seating = Seating()
         sqlite3.connect = MagicMock(return_value='connection failed')
-        conn = seating.create_connection('test_database')
-        sqlite3.connect.assert_called_with('test_database')
-        self.assertEqual(conn, 'connection failed')
+        seating.create_connection()
+        sqlite3.connect.assert_called_with('')
+        self.assertEqual(seating.connection, 'connection failed')
 
     def test_successful_connection(self):
         """
         Simple unittest for successful sqlite db connection
         """
         seating = Seating()
-        conn = seating.create_connection(":memory:")
-        self.assertIsInstance(conn, sqlite3.Connection)
+        seating.db_file = '":memory:"'
+        seating.create_connection()
+        self.assertIsInstance(seating.connection, sqlite3.Connection)
      
     def test_check_seat_ref(self):
         """
@@ -109,7 +113,7 @@ class TestInput(unittest.TestCase):
         seating.num_to_let_mapping = {1: 'A', 2: 'B', 3: 'C', 4: 'D', 5: 'E', 6: 'F',}
         seat = seating.check_seat_ref(8)
         exp_seat = (2,"B")
-        self.assertIsInstance(seat, exp_seat)
+        self.assertEqual(seat, exp_seat)
 
 
 if __name__ == '__main__':
