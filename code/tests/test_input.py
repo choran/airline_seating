@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock, Mock, patch
 import unittest
 import sqlite3
+<<<<<<< HEAD
 import sys
 sys.path.append('..')
 from seat_assign_16200385_16201212_03783821 import Seating
