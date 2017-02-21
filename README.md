@@ -26,3 +26,9 @@ If a party can't be accommodated together using the rules above, we try to accom
 4. A seat reference is parsed from the dictionary entry and the database is updated.
 5. If passengers must be separated, the booking is looped through until each party member has been given a seat. We try to allocate seats alongside the greatest number of passengers possible. For example, a party of five will be broken into 4 and 1 rather than 3 and 2 if possible.
 6. Finally, the overall statistics of passengers refused and separated are updated in the database.
+
+## GitHub Repository URL
+https://github.com/choran/airline_seating
+
+## Statement of Work
+We began this assignment with a day long kick-off meeting, where we broke down the requirements from the specification, came up with a draft solution that we thought would satisfy the requirements given and then worked our way though test-case scenarios to ensure that our solution would be a viable one. At the end of this meeting, we roughly broke up the tasks into three equal segments, those being 1) Database input / output and intial dictionary population, 2) The dictionary sorting algorithm which identifies the best row and 3) The booking allocation functionality which utilises the aforementioned dictionary to assign and store the seating details. We then each took one of these sections and worked on them individually, before amalgamating our work into a single functioning class, complete with test cases and documentation. 
