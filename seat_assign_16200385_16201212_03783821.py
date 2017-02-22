@@ -80,11 +80,11 @@ class Seating:
 
         # Decrease the remaining passengers the plane can take.
         self.remaining -= partyNum
-        # Update dictionary of avialable seats and allocate seats in database
+        # Update dictionary of available seats and allocate seats in database
         self.seat_availability[seat[0]] -= partyNum
         self.allocate_seats(name, partyNum, seat)
 
-        # If party had to be split up, update statistics and alloate seats for those separated.
+        # If party had to be split up, update statistics and allocate seats for those separated.
         if carryover > 0:
             # On the first run through, we update the passengers separated.
             # On second run, these have already been accounted for.
