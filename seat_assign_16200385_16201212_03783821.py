@@ -10,7 +10,6 @@ VALUE = 1
 
 class Seating:
     def __init__(self):
-        # Empty for now, may read input from text file or other source
 
         self.connection = None
         self.db_file = ""
@@ -62,13 +61,13 @@ class Seating:
         seat_diff = sorted(avail_seats.items(), key=self._evens1st, reverse=True)
         # Only interested in first element on sorted list
         # It is a tuple of seat num and diff value
-        return (seat_diff[0])
+        return seat_diff[0]
 
     def check_booking(self, name, number, push_carryover):
         """
         name: Name of party
         number: Number travelling
-        push_carryover: Boolean of whether first call to function which will update seperated passengers.
+        push_carryover: Boolean of whether first call to function which will update separated passengers.
         """
         # Check best seating position by iterating until party is small enough to be allocated
         partyNum = number
@@ -85,13 +84,13 @@ class Seating:
         self.seat_availability[seat[0]] -= partyNum
         self.allocate_seats(name, partyNum, seat)
 
-        # If party had to be split up, update statistics and alloacte seats for those seperated.
-        if (carryover > 0):
-            # On the first run through, we update passenger separeted. On second run, these have already been accounted for.
+        # If party had to be split up, update statistics and alloate seats for those separated.
+        if carryover > 0:
+            # On the first run through, we update the passengers separated.
+            # On second run, these have already been accounted for.
             if push_carryover == True:
-                print('Party of %d separated (%s)' % (number, name))
                 self.separated += number
-            # Itereate through again looking for seats for the separated passemgers
+            # Iterate through again looking for seats for the separated passengers
             self.check_booking(name, carryover, False)
 
     def allocate_bookings(self):
@@ -102,11 +101,9 @@ class Seating:
         for index, row in df.iterrows():
             partyName = row['Party']
             partyNum = row['Number']
-            print('Find %d seats for %s' % (partyNum, partyName))
 
             # If we can't accommodate them then refuse else allocate some seat.
-            if (partyNum > self.remaining):
-                print('Refused %s as party of %d' % (partyName, partyNum))
+            if partyNum > self.remaining:
                 self.refused += partyNum
             else:
                 self.check_booking(partyName, partyNum, True)
@@ -121,28 +118,26 @@ class Seating:
         seats = []
         # Find the seat references for each of the passengers
         for i in range(1, partyNum + 1):
-            ##The seat reference is starting position + leftover seats after allocation + party number - passenger number
+            # The seat reference is starting position + leftover seats after allocation + party number - passenger number
             seat = self.check_seat_ref(startSeat[0] + startSeat[1] + partyNum - i)
             seats.append(seat)
 
         # Update the database with the seats each passenger has been allocated.
         cursor = self.connection.cursor()
-        print(partyName, seats)
+        # (partyName, seats)
         for item in seats:
             cursor.execute("UPDATE seating SET name='%s' WHERE row=%d AND seat='%s';" % (partyName, item[0], item[1]))
         self.connection.commit()
-        print(
-            "self.remaining & self.refused & self.separated: %i %i %i" % (self.remaining, self.refused, self.separated))
 
     def check_seat_ref(self, seatNum):
         """
         seatNum: The numerical seat reference e.g. 6
         :return: Tuple with common seat refernce e.g. (1,F)
         """
-        # Row number of the seat, rounded up to intefer
+        # Row number of the seat, rounded up to integer
         row = math.ceil(seatNum / self.seats_per_row)
         # The number mapping of the seat.
-        seatMap = seatNum - (row - 1) * (self.seats_per_row)
+        seatMap = seatNum - (row - 1) * self.seats_per_row
         # Access the letter mapping the seat corresponds to.
         seatLetter = self.num_to_let_mapping[seatMap]
         # Return the seat in tuple
@@ -164,13 +159,13 @@ class Seating:
 
     def create_connection(self):
         '''
-        Function will create the connection to the sqlite3 daetabase using the provided command-line arguments
+        Function will create the connection to the sqlite3 database using the provided command-line arguments
         '''
         self.connection = sqlite3.connect(self.db_file)
 
     def destroy_connection(self):
         '''
-        Function will destroy the connection to the sqlite3 daetabase
+        Function will destroy the connection to the sqlite3 database
         '''
         self.connection.close()
 
@@ -221,10 +216,10 @@ class Seating:
 
             # If the next passenger to be processed is not on the same row as the previous passenger
             if current_row != new_row:
-                if (row_populated == False):
+                if row_populated == False:
                     # Create entry for fully empty row
                     self.seat_availability[(current_row - 1) * self.seats_per_row + 1] = 0
-                row_populated == False
+                row_populated = False
 
                 # Create entry for the rest of the row
                 rest_of_row = (self.seats_per_row - current_seat) + 1
@@ -290,26 +285,25 @@ class Seating:
                 current_pointer = ((i - 1) * self.seats_per_row) + 1
                 self.seat_availability[current_pointer] = self.seats_per_row
 
-        print('-----')
-        for (k, v) in sorted(self.seat_availability.items()):
-            print('Key: ' + str(k) + ' Value: ' + str(v))
-        print('-----')
-        print('Seats Remaining: %i' % (self.remaining))
-        print('-----')
-
     def populate_statistics(self):
         '''
         Function will populate the DB with the plane statistics i.e. passengers_refused, passengers_separated
         '''
         cursor = self.connection.cursor()
-        print("self.refused & self.separated: %i %i" % (self.refused, self.separated))
         cursor.execute(
             "UPDATE metrics SET passengers_refused = %d, passengers_separated = %d;" % (self.refused, self.separated))
         self.connection.commit()
 
+    def print_statistics(self):
+        print("Total number of seats: %d" % self.total_seats)
+        print("Number of rows: %d" % self.num_rows)
+        print("Number of seats per row: %d" % self.seats_per_row)
+        print("Total number of seats remaining: %d" % self.remaining)
+        print("Total number of seats separated: %d" % self.separated)
+        print("Total number of seats refused: %d" % self.refused)
+
 
 if __name__ == '__main__':
-    print('test')
     seating = Seating()
 
     seating.parse_args()
@@ -319,3 +313,4 @@ if __name__ == '__main__':
     seating.allocate_bookings()
     seating.populate_statistics()
     seating.destroy_connection()
+    seating.print_statistics()
