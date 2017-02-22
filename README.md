@@ -27,6 +27,15 @@ If a party can't be accommodated together using the rules above, we try to accom
 5. If passengers must be separated, the booking is looped through until each party member has been given a seat. We try to allocate seats alongside the greatest number of passengers possible. For example, a party of five will be broken into 4 and 1 rather than 3 and 2 if possible.
 6. Finally, the overall statistics of passengers refused and separated are updated in the database.
 
+## Test Databases
+We have included a number of test databases, which we used to test the program. They are all under code/tests:
+1. airline_seating.db - The original sample database file
+2. airline_seating_consecutive.db - A ten row, ABCDEF seat configuration plane with mainly consecutive passengers already seated
+3. airline_seating_empty_plane.db - A fifteen row, ACDF seat configuration plane with no existing passengers
+4. airline_seating_empty_rows.db - A nine row, ACDF seat configuration plane with multiple empty rows (and empty passengers!)
+5. airline_seating_empty_seats.db - A fifteen row, ACDF seat configuration plane with all seats vacant, apart from the first two
+6. airline_seating_full_plane.db - A fifteen row, ACDF seat configuration plane with all existing passengers
+
 ## GitHub Repository URL
 https://github.com/choran/airline_seating
 
